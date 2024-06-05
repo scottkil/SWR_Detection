@@ -1,13 +1,13 @@
 %% --- Load in Data --- %%
-HippFN = 'Z:\Scott\CopeColab\20240526_Ch13.abf';
-CTXfn = 'Z:\Scott\CopeColab\20240526_Ch15.abf';
+HippFN = 'Z:\Scott\CopeColab\20240525_Ch2.abf';
+CTXfn = 'Z:\Scott\CopeColab\20240525_Ch3.abf';
 CTX = swr_abfLoadEEG(CTXfn,1,1000); % load cortical EEG
 Hipp = swr_abfLoadEEG(HippFN,1,1000); % load hippocampus EEG
 Fs = Hipp.finalFS; % sampling frequency (Hz)
 
 % -- Sample only a specific portion of recording -- %
-if 0% SET TO 1 AND CHANGE tRange VALUES TO SAMPLE PORTION OF RECORDING. SET TO 0 TO USE WHOLE RECORDING
-    tRange = [2 27]; % in hours
+if 1% SET TO 1 AND CHANGE tRange VALUES TO SAMPLE PORTION OF RECORDING. SET TO 0 TO USE WHOLE RECORDING
+    tRange = [2 4]; % in hours
     tInd = [tRange(1)*3600,(tRange(2)*3600)] * Fs;
     indRange = 1+tInd(1):tInd(2);
     CTX.data = CTX.data(indRange);
@@ -17,10 +17,12 @@ if 0% SET TO 1 AND CHANGE tRange VALUES TO SAMPLE PORTION OF RECORDING. SET TO 0
 end
 
 %% --- Set Parameters --- %%
+durThreshTime = 0.015; % minimum ripple duration (in seconds)
 sdet = 1; % Ripple envelope EDGE threshold (z-score)
 sdP = 3; % Ripple envelope PEAK threshold (z-score)
 swLag = 0.04; % largest acceptable gap between sharp wave trough and ripple start (seconds)
-SWT = -2; % sharp wave-threshold (z-score)
+SWT = -1; % sharp wave-threshold (z-score)
+noiseT = 2;
 lfc_sw = 4; % Lower cutoff frequency for sharp waves (Hz)
 ufc_sw = 40; % Upper cutoff frequency for sharp wave (Hz)
 lfc_noise = 60; % Lower cutoff frequency for NOISE (Hz)
@@ -50,7 +52,7 @@ CTXnoise = filtfilt(b, a, CTX.data);
 rectWin = smoothdata(abs(zscore(HippRip)),1,'movmean',8);
 noiseWin = smoothdata(abs(zscore(CTXnoise)),1,'movmean',8);
 rippSig = rectWin-noiseWin;
-noiseInds = [];
+noiseInds = find(noiseWin>noiseT);
 
 %% --- Find slow wave troughs --- %%
 zHippSW = zscore(HippSW);
@@ -82,7 +84,6 @@ end
 putRips = [riseI,fallI]; % putative ripple start and end indices
 
 % Remove potential ripples that are too short
-durThreshTime = 0.015;
 durThreshSamps = Fs*durThreshTime;
 rmLog = diff(putRips,1,2)<durThreshSamps;
 putRips(rmLog,:) = [];
@@ -129,8 +130,7 @@ rip.CTX = CTX.data;
 rip.time = Hipp.time;
 rip.Hipp = Hipp.data;
 rip.FS = Fs;
-% rip.NT = noiseT;
-% rip.HFnoise = hgInterp;
+rip.noiseT = noiseT;
 rip.HFnoise = noiseWin;
 rip.ripInds = putRips;
 rip.rippSig = rippSig;
