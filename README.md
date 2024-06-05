@@ -1,4 +1,4 @@
 # Dependencies
-### MATLAB TOOLBOXES
+### MATLAB Toolboxes:
 - Signal Processing Toolbox
 - Statistics and Machine Learning Toolbox
