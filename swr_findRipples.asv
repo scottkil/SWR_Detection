@@ -1,6 +1,6 @@
 %% --- Load in Data --- %%
-HippFN = 'Z:\Scott\CopeColab\20240529_Ch14.abf';
-CTXfn = 'Z:\Scott\CopeColab\20240529_Ch15.abf';
+HippFN = 'Z:\Scott\CopeColab\20240527_Ch1.abf';
+CTXfn = 'Z:\Scott\CopeColab\20240527_Ch3.abf';
 CTX = swr_abfLoadEEG(CTXfn,1,1000); % load cortical EEG
 Hipp = swr_abfLoadEEG(HippFN,1,1000); % load hippocampus EEG
 Fs = Hipp.finalFS; % sampling frequency (Hz)
@@ -48,13 +48,11 @@ CTXnoise = filtfilt(b, a, CTX.data);
 % hippEnv = envelope(HippRip,envSize);
 % noiseEnv = envelope(CTXnoise,envSize);
 % rippEnv = zscore(hippEnv)-zscore(noiseEnv);
-smoothWin = .008; % smoothing window
-noiseWin = smoothdata(abs(zscore(CTXnoise)),1,'movmean',round(smoothWin*Fs)); % smoothed noise trace
-noiseLog = noiseWin > noiseT; % find times of dense noise and store in logical vector
-noiseInds = find(noiseLog); % get those indices of noisey samples
-HippRip(noiseLog) = 0; % remove the noisey samples from the hippocampal trace
-rectWin = smoothdata(abs(zscore(HippRip)),1,'movmean',round(smoothWin*Fs)); % smooth ripple power trace
-rippSig = rectWin;%-noiseWin; 
+smoothWin = .008;
+noiseWin = smoothdata(abs(zscore(CTXnoise)),1,'movmean',round(smoothWin*Fs));
+
+rectWin = smoothdata(abs(zscore(HippRip)),1,'movmean',round(smoothWin*Fs));
+rippSig = rectWin;%-noiseWin;
 
 %% --- Find slow wave troughs --- %%
 zHippSW = zscore(HippSW);
